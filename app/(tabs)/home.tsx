@@ -22,7 +22,7 @@ const Home = () => {
   const { user, setUser, setIsLoggedIn } = useGlobalContext();
   const pathName = usePathname();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const { data: posts, refreshData } = useAppwrite(getAllPost);
+  const { data: posts, refreshData } = useAppwrite(() => getAllPost(user.$id));
   const { data: latestPosts } = useAppwrite(getLatestPosts);
   const onRefresh = async () => {
     setIsRefreshing(true);

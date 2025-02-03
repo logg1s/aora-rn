@@ -85,13 +85,16 @@ export async function register(
   return newUser;
 }
 
-export async function getAllPost() {
-  const posts = await database.listDocuments(
+export async function getAllPost(userId: string) {
+  const [posts, bookmarks] = await Promise.all([database.listDocuments(
     config.databaseId,
     config.videosCollectionId,
     [Query.orderDesc('$createdAt')]
-  );
-  return posts.documents;
+  ),
+  getUserBookmark(userId)
+  ]);
+
+  return posts.documents.map(p => { return { ...p, isSave: bookmarks.some(b => b.$id === p.$id) } })
 }
 
 export async function getLatestPosts() {
@@ -200,4 +203,17 @@ export async function getUserBookmark(userId: string) {
     config.databaseId, config.bookmarkId, [Query.equal("userId", userId), Query.orderDesc("$createdAt")]
   )
   return post.documents.map(p => p.videoId);
+}
+
+export async function saveBookmark(userId: string, videoId: string) {
+  const newBookmark = await database.createDocument(
+    config.databaseId,
+    config.bookmarkId,
+    ID.unique(),
+    {
+      userId,
+      videoId
+    }
+  )
+  return newBookmark;
 }
