@@ -16,7 +16,7 @@ export const config = {
   usersCollectionId: process.env.EXPO_PUBLIC_APPWRITE_USER_COLLECTION_ID,
   videosCollectionId: process.env.EXPO_PUBLIC_APPWRITE_VIDEO_COLLECTION_ID,
   storageId: process.env.EXPO_PUBLIC_APPWRITE_STORAGE_ID,
-  bookmarkId: process.env.EXPO_PUBLIC_APPWRITE_BOOKMARK_COLLECTION_ID
+  bookmarkId: process.env.EXPO_PUBLIC_APPWRITE_BOOKMARK_COLLECTION_ID,
 };
 
 let client: Client;
@@ -44,7 +44,7 @@ export async function getCurrentUser() {
   const user = await database.listDocuments(
     config.databaseId,
     config.usersCollectionId,
-    [Query.equal("accountId", session.userId)]
+    [Query.equal("accountId", session.userId)],
   );
 
   if (user.documents.length === 0) {
@@ -60,13 +60,13 @@ database = new Databases(client);
 export async function register(
   email: string,
   password: string,
-  username: string
+  username: string,
 ) {
   const newAccount = await account.create(
     ID.unique(),
     email,
     password,
-    username
+    username,
   );
   const avatarUrl = avatars.getInitials(username);
   await login(email, password);
@@ -80,28 +80,29 @@ export async function register(
       email,
       username,
       avatar: avatarUrl,
-    }
+    },
   );
   return newUser;
 }
 
 export async function getAllPost(userId: string) {
-  const [posts, bookmarks] = await Promise.all([database.listDocuments(
-    config.databaseId,
-    config.videosCollectionId,
-    [Query.orderDesc('$createdAt')]
-  ),
-  getUserBookmark(userId)
+  const [posts, bookmarks] = await Promise.all([
+    database.listDocuments(config.databaseId, config.videosCollectionId, [
+      Query.orderDesc("$createdAt"),
+    ]),
+    getUserBookmark(userId),
   ]);
 
-  return posts.documents.map(p => { return { ...p, isSave: bookmarks.some(b => b.$id === p.$id) } })
+  return posts.documents.map((p) => {
+    return { ...p, isSave: bookmarks.some((b) => b.$id === p.$id) };
+  });
 }
 
 export async function getLatestPosts() {
   const posts = await database.listDocuments(
     config.databaseId,
     config.videosCollectionId,
-    [Query.orderDesc("$createdAt"), Query.limit(7)]
+    [Query.orderDesc("$createdAt"), Query.limit(7)],
   );
   return posts.documents;
 }
@@ -110,23 +111,27 @@ export async function searchPosts(query: string) {
   const posts = await database.listDocuments(
     config.databaseId,
     config.videosCollectionId,
-    [Query.search("title", query)]
+    [Query.search("title", query)],
   );
   return posts.documents;
 }
 
 export async function searchBookmarkPost(userId: string, query: string) {
   const post = await database.listDocuments(
-    config.databaseId, config.bookmarkId, [Query.equal("userId", userId), Query.orderDesc("$createdAt")]
-  )
-  return post.documents.map(bookmark => bookmark.videoId).filter(v => v.title.includes(query));
+    config.databaseId,
+    config.bookmarkId,
+    [Query.equal("userId", userId), Query.orderDesc("$createdAt")],
+  );
+  return post.documents
+    .map((bookmark) => bookmark.videoId)
+    .filter((v) => v.title.includes(query));
 }
 
 export async function getUserPosts(userId: string) {
   const posts = await database.listDocuments(
     config.databaseId,
     config.videosCollectionId,
-    [Query.equal("creator", userId), Query.orderDesc("$createdAt")]
+    [Query.equal("creator", userId), Query.orderDesc("$createdAt")],
   );
   return posts.documents;
 }
@@ -152,7 +157,7 @@ export const createVideo = async (form) => {
       thumbnail,
       video,
       creator: form.userId,
-    }
+    },
   );
   return newPost;
 };
@@ -168,7 +173,7 @@ export async function uploadFile(file, type): any {
     type: file.mimeType,
     size: file.fileSize,
     uri: file.uri,
-  }
+  };
 
   const uploadedFile = storage.createFile(config.storageId, ID.unique(), asset);
   const fileUrl = await getFilePreview((await uploadedFile).$id, type);
@@ -186,7 +191,7 @@ export async function getFilePreview(fileId: string, type: string) {
       2000,
       2000,
       ImageGravity.Top,
-      100
+      100,
     );
   } else {
     throw new Error("Invalid file type");
@@ -200,9 +205,11 @@ export async function getFilePreview(fileId: string, type: string) {
 
 export async function getUserBookmark(userId: string) {
   const post = await database.listDocuments(
-    config.databaseId, config.bookmarkId, [Query.equal("userId", userId), Query.orderDesc("$createdAt")]
-  )
-  return post.documents.map(p => p.videoId);
+    config.databaseId,
+    config.bookmarkId,
+    [Query.equal("userId", userId), Query.orderDesc("$createdAt")],
+  );
+  return post.documents.map((p) => p.videoId);
 }
 
 export async function saveBookmark(userId: string, videoId: string) {
@@ -212,8 +219,8 @@ export async function saveBookmark(userId: string, videoId: string) {
     ID.unique(),
     {
       userId,
-      videoId
-    }
-  )
+      videoId,
+    },
+  );
   return newBookmark;
 }

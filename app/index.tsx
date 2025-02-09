@@ -40,7 +40,9 @@ export default function App() {
             Where creativity meets innovation: embark on a journey of limitless
             exploration with Aora
           </Text>
-          {isLoading ? <ActivityIndicator size={"large"} /> : (
+          {isLoading ? (
+            <ActivityIndicator size={"large"} />
+          ) : (
             <CustomButton
               title="Continue with Email"
               containerStyles="w-full mt-7"
